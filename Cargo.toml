@@ -11,6 +11,11 @@ winapi = "0.3.9"
 
 [features]
 default = []
+processthreadsapi = [
+    "winapi/processthreadsapi",
+    "winapi/synchapi",
+    "winapi/winbase",
+]
 tlhelp32 = [
     "winapi/tlhelp32",
     "winapi/handleapi"
