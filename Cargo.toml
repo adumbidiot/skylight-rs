@@ -1,0 +1,16 @@
+[package]
+name = "skylight"
+version = "0.0.0"
+authors = [ "adumbidiot <nathaniel.daniel23@outlook.com>" ]
+edition = "2018"
+
+[dependencies]
+bitflags = "1.2.1"
+winapi = "0.3.9"
+
+[features]
+default = []
+tlhelp32 = [
+    "winapi/tlhelp32",
+    "winapi/handleapi"
+]
