@@ -29,7 +29,11 @@ bitflags::bitflags! {
 pub struct Process(Handle);
 
 impl Process {
-    /// Open an existing process
+    /// Open an existing process.
+    ///
+    /// # Errors
+    /// Fails if the process could not be opened.
+    ///
     pub fn open(access_rights: ProcessAccessRights, pid: DWORD) -> std::io::Result<Self> {
         let handle = unsafe { OpenProcess(access_rights.bits(), FALSE, pid) };
 
@@ -42,6 +46,11 @@ impl Process {
 
     /// Signal this process to terminate.
     /// This requires the `TERMINATE` permission.
+    ///
+    /// # Errors
+    /// Fails if this process was not signalled to terminate.
+    /// This is usually a permissions error.
+    ///
     pub fn terminate(&self, exit_code: u32) -> std::io::Result<()> {
         if unsafe { TerminateProcess(self.0.as_raw().cast(), exit_code) == FALSE } {
             return Err(std::io::Error::last_os_error());
@@ -52,6 +61,10 @@ impl Process {
 
     /// Wait for this process to terminate until the given interval elapses, immediately if it is 0, and indefinitely if it is `u32::MAX`.
     /// This requires the `SYNCHRONIZE` permission.
+    ///
+    /// # Errors
+    /// Fails if this process was not waited on.
+    ///
     pub fn wait(&self, millis: u32) -> std::io::Result<()> {
         let ret = unsafe { WaitForSingleObject(self.0.as_raw().cast(), millis) };
 
