@@ -13,41 +13,68 @@ use winapi::um::winnt::HANDLE;
 
 // TODO: Finish Mask
 bitflags::bitflags! {
-    /// The flags to pass when creating a new Snapshot
+    /// The flags to pass when creating a new [`Snapshot`].
+    ///
     pub struct SnapshotFlags: DWORD {
         const SNAP_ALL = TH32CS_SNAPALL;
     }
 }
 
-/// A Snapshot of process and heap info
+/// A Snapshot of process and heap info.
 #[derive(Debug)]
 pub struct Snapshot(HANDLE);
 
 impl Snapshot {
-    /// Get a new snapshot
+    /// Get a new [`Snapshot`].
+    ///
+    /// # Errors
+    /// Returns an [`std::io::Error`] if a new [`Snapshot`] could not be created.
+    ///
     pub fn new(flags: SnapshotFlags) -> Result<Self, std::io::Error> {
-        let handle = unsafe { CreateToolhelp32Snapshot(flags.bits(), 0) };
+        let pid = 0;
+        let handle = unsafe { CreateToolhelp32Snapshot(flags.bits(), pid) };
         if handle == INVALID_HANDLE_VALUE {
             return Err(std::io::Error::last_os_error());
         }
         Ok(Self(handle))
     }
 
-    /// Iter processes
+    /// Iter over the processes in this snapshot.
+    ///
     pub fn iter_processes(&mut self) -> ProcessIter {
         ProcessIter::from_snapshot(self)
+    }
+
+    /// Try to close this [`Snapshot`].
+    ///
+    /// # Errors
+    /// Returns an error which contains this object if this object could not be destroyed.
+    ///
+    pub fn close(self) -> Result<(), (Self, std::io::Error)> {
+        let snapshot = ManuallyDrop::new(self);
+        let ret = unsafe {
+            CloseHandle(snapshot.0);
+        };
+
+        if ret != 0 {
+            Ok(())
+        } else {
+            Err(
+                ManuallyDrop::into_inner(snapshot),
+                std::io::Error::last_os_error(),
+            )
+        }
     }
 }
 
 impl Drop for Snapshot {
     fn drop(&mut self) {
-        unsafe {
-            CloseHandle(self.0);
-        }
+        std::mem::forget(Self(self.0).close())
     }
 }
 
-/// Process Iterator
+/// An iterator over processes in a [`Snapshot`].
+///
 pub struct ProcessIter<'a> {
     current: PROCESSENTRY32W,
     has_more: bool,
@@ -56,7 +83,8 @@ pub struct ProcessIter<'a> {
 
 impl<'a> ProcessIter<'a> {
     // TODO: Should this take `&'a Snapshot`?
-    /// Make a process iter from a snapshot
+    /// Make a [`ProcessIter`] from a `&mut` [`Snapshot`].
+    ///
     pub fn from_snapshot(snapshot: &'a mut Snapshot) -> Self {
         let mut current: PROCESSENTRY32W = unsafe { std::mem::zeroed() };
         current.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as DWORD;
@@ -85,27 +113,32 @@ impl Iterator for ProcessIter<'_> {
     }
 }
 
-/// A Process Entry
+/// A Process Entry.
+///
 pub struct ProcessEntry(PROCESSENTRY32W);
 
 impl ProcessEntry {
-    /// Get the PID
+    /// Get the PID of this [`ProcessEntry`].
+    ///
     pub fn pid(&self) -> u32 {
         self.0.th32ProcessID
     }
 
-    /// Get the number of threads
+    /// Get the number of threads created by this process.
+    ///
     pub fn num_threads(&self) -> u32 {
         self.0.cntThreads
     }
 
-    /// Get the thread base priority
+    /// Get the thread base priority of this process.
+    ///
     pub fn thread_base_priority(&self) -> i32 {
         self.0.pcPriClassBase
     }
 
-    /// Get the exe name as a u16 slice
-    pub fn exe_name_slice(&self) -> &[u16] {
+    /// Get the exe name as a wide character slice. This may or may not be valid UTF16.
+    ///
+    pub fn exe_name_wide_slice(&self) -> &[u16] {
         let len = self
             .0
             .szExeFile
@@ -117,9 +150,10 @@ impl ProcessEntry {
     }
 
     /// Get the exe name as an OsString. This allocates per call, so cache the result.
-    /// If you want possibly-malformed utf16, use `exe_name_slice` instead.
+    /// If you want possibly-malformed utf16 without allocating, use [`ProcessEntry::exe_name_wide_slice`] instead.
+    ///
     pub fn exe_name(&self) -> OsString {
-        OsString::from_wide(self.exe_name_slice())
+        OsString::from_wide(self.exe_name_wide_slice())
     }
 }
 
