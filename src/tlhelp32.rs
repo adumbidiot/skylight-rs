@@ -1,15 +1,14 @@
+use crate::handleapi::Handle;
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::minwindef::TRUE;
-use winapi::um::handleapi::CloseHandle;
 use winapi::um::handleapi::INVALID_HANDLE_VALUE;
 use winapi::um::tlhelp32::CreateToolhelp32Snapshot;
 use winapi::um::tlhelp32::Process32FirstW;
 use winapi::um::tlhelp32::Process32NextW;
 use winapi::um::tlhelp32::PROCESSENTRY32W;
 use winapi::um::tlhelp32::TH32CS_SNAPALL;
-use winapi::um::winnt::HANDLE;
 
 // TODO: Finish Mask
 bitflags::bitflags! {
@@ -22,7 +21,7 @@ bitflags::bitflags! {
 
 /// A Snapshot of process and heap info.
 #[derive(Debug)]
-pub struct Snapshot(HANDLE);
+pub struct Snapshot(Handle);
 
 impl Snapshot {
     /// Get a new [`Snapshot`].
@@ -32,11 +31,15 @@ impl Snapshot {
     ///
     pub fn new(flags: SnapshotFlags) -> Result<Self, std::io::Error> {
         let pid = 0;
-        let handle = unsafe { CreateToolhelp32Snapshot(flags.bits(), pid) };
-        if handle == INVALID_HANDLE_VALUE {
-            return Err(std::io::Error::last_os_error());
+        unsafe {
+            let handle = CreateToolhelp32Snapshot(flags.bits(), pid);
+
+            if handle == INVALID_HANDLE_VALUE {
+                return Err(std::io::Error::last_os_error());
+            }
+
+            Ok(Self(Handle::from_raw(handle.cast())))
         }
-        Ok(Self(handle))
     }
 
     /// Iter over the processes in this snapshot.
@@ -51,25 +54,7 @@ impl Snapshot {
     /// Returns an error which contains this object if this object could not be destroyed.
     ///
     pub fn close(self) -> Result<(), (Self, std::io::Error)> {
-        let snapshot = ManuallyDrop::new(self);
-        let ret = unsafe {
-            CloseHandle(snapshot.0);
-        };
-
-        if ret != 0 {
-            Ok(())
-        } else {
-            Err(
-                ManuallyDrop::into_inner(snapshot),
-                std::io::Error::last_os_error(),
-            )
-        }
-    }
-}
-
-impl Drop for Snapshot {
-    fn drop(&mut self) {
-        std::mem::forget(Self(self.0).close())
+        self.0.close().map_err(|(handle, err)| (Self(handle), err))
     }
 }
 
@@ -89,7 +74,7 @@ impl<'a> ProcessIter<'a> {
         let mut current: PROCESSENTRY32W = unsafe { std::mem::zeroed() };
         current.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as DWORD;
 
-        let has_more = unsafe { Process32FirstW(snapshot.0, &mut current) == TRUE };
+        let has_more = unsafe { Process32FirstW(snapshot.0.as_raw().cast(), &mut current) == TRUE };
 
         ProcessIter {
             current,
@@ -105,7 +90,9 @@ impl Iterator for ProcessIter<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.has_more {
             let ret = ProcessEntry::from(self.current);
-            self.has_more = unsafe { Process32NextW(self.snapshot.0, &mut self.current) == TRUE };
+            self.has_more = unsafe {
+                Process32NextW(self.snapshot.0.as_raw().cast(), &mut self.current) == TRUE
+            };
             Some(ret)
         } else {
             None
