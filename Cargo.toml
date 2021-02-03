@@ -14,6 +14,9 @@ default = []
 handleapi = [
     "winapi/handleapi",
 ]
+oleauto = [
+    "winapi/oleauto",
+]
 processthreadsapi = [
     "handleapi",
     "winapi/processthreadsapi",
