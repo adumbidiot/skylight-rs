@@ -628,7 +628,7 @@ mod test {
     fn clone_bstr_ref() {
         let s = BStr::new("Hello World!");
         let r = s.as_bstr_ref();
-        let r1 = r.clone();
+        let r1 = <&oleauto::bstr::BStrRef>::clone(r);
 
         assert_eq!(r, r1);
     }
