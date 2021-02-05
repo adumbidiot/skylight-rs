@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::ffi::OsStr;
@@ -342,7 +344,7 @@ impl BStrRef {
     }
 }
 
-impl std::fmt::Debug for &BStrRef {
+impl std::fmt::Debug for BStrRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let wide_iter = self.as_wide_slice().iter().copied();
         let iter = std::char::decode_utf16(wide_iter)
@@ -386,6 +388,14 @@ impl TryFrom<&[u16]> for BStr {
 
     fn try_from(data: &[u16]) -> Result<Self, Self::Error> {
         Self::from_wide_slice(&data)
+    }
+}
+
+impl TryFrom<&BStrRef> for BStr {
+    type Error = BStrCreationError;
+
+    fn try_from(data: &BStrRef) -> Result<Self, Self::Error> {
+        Self::from_wide_slice(data.as_wide_slice())
     }
 }
 
@@ -447,6 +457,12 @@ impl Hash for BStr {
     }
 }
 
+impl Borrow<BStrRef> for BStr {
+    fn borrow(&self) -> &BStrRef {
+        &self
+    }
+}
+
 /// A [`BStrRef`] wrapper that implments `Display`.
 /// This forwars the `Debug` impl to the underlying [`BStrRef`],
 /// while lossily displaying the string for `Display`.
@@ -479,8 +495,26 @@ impl Hash for BStrRef {
     }
 }
 
+impl PartialEq<BStr> for BStrRef {
+    fn eq(&self, other: &BStr) -> bool {
+        self.eq(other.as_bstr_ref())
+    }
+}
+
+impl<'a> PartialEq<BStr> for &'a BStrRef {
+    fn eq(&self, other: &BStr) -> bool {
+        self.eq(other.as_bstr_ref())
+    }
+}
+
 impl PartialEq<BStrRef> for BStrRef {
     fn eq(&self, other: &Self) -> bool {
+        self.as_wide_slice().eq(other.as_wide_slice())
+    }
+}
+
+impl<'a> PartialEq<BStrRef> for &'a BStrRef {
+    fn eq(&self, other: &BStrRef) -> bool {
         self.as_wide_slice().eq(other.as_wide_slice())
     }
 }
@@ -510,6 +544,26 @@ impl PartialEq<&str> for BStrRef {
 }
 
 impl Eq for BStrRef {}
+
+impl ToOwned for BStrRef {
+    type Owned = BStr;
+
+    fn to_owned(&self) -> <Self as ToOwned>::Owned {
+        BStr::new(self)
+    }
+}
+
+impl From<BStr> for Cow<'_, BStrRef> {
+    fn from(data: BStr) -> Self {
+        Cow::Owned(data)
+    }
+}
+
+impl<'a> From<&'a BStrRef> for Cow<'a, BStrRef> {
+    fn from(data: &'a BStrRef) -> Self {
+        Cow::Borrowed(data)
+    }
+}
 
 #[cfg(test)]
 mod test {
@@ -568,5 +622,38 @@ mod test {
         assert!(s.is_empty());
         assert_eq!(s.len(), 0);
         assert_eq!(s.as_wide_slice(), &[]);
+    }
+
+    #[test]
+    fn clone_bstr_ref() {
+        let s = BStr::new("Hello World!");
+        let r = s.as_bstr_ref();
+        let r1 = <&BStrRef>::clone(&r);
+
+        assert_eq!(r, r1);
+    }
+
+    #[test]
+    fn bstr_to_owned() {
+        let s = BStr::new("Hello World!");
+        let r = s.as_bstr_ref();
+        let s1 = r.to_owned();
+
+        assert_eq!(s1, s);
+    }
+
+    #[test]
+    fn borrow_bstr() {
+        let s = BStr::new("Hello World!");
+        let b = s.borrow();
+        assert_eq!(b, s);
+    }
+
+    #[test]
+    fn cow_bstr() {
+        let owned_cow_bstr: Cow<BStrRef> = BStr::new("data").into();
+        let borrowed_cow_bstr: Cow<BStrRef> = owned_cow_bstr.as_ref().into();
+
+        assert_eq!(owned_cow_bstr, borrowed_cow_bstr);
     }
 }
