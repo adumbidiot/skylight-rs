@@ -2,6 +2,10 @@
 #[cfg(feature = "handleapi")]
 pub mod handleapi;
 
+/// objbase.h Utilities
+#[cfg(feature = "objbase")]
+pub mod objbase;
+
 /// oleauto.h Utilities
 #[cfg(feature = "oleauto")]
 pub mod oleauto;
