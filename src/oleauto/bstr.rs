@@ -345,16 +345,21 @@ impl BStrRef {
     pub fn display(&self) -> BStrDisplay {
         BStrDisplay(self)
     }
+
+    /// Try to iterate over the chars in this string.
+    ///
+    pub fn chars(&self) -> impl Iterator<Item = Result<char, std::char::DecodeUtf16Error>> + '_ {
+        std::char::decode_utf16(self.as_wide_slice().iter().copied())
+    }
 }
 
 impl std::fmt::Debug for BStrRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let wide_iter = self.as_wide_slice().iter().copied();
-        let iter = std::char::decode_utf16(wide_iter)
-            .map(|r| r.unwrap_or(std::char::REPLACEMENT_CHARACTER));
-
         f.write_char('"')?;
-        for c in iter {
+        for c in self
+            .chars()
+            .map(|r| r.unwrap_or(std::char::REPLACEMENT_CHARACTER))
+        {
             for c in c.escape_debug() {
                 f.write_char(c)?
             }
@@ -480,11 +485,11 @@ impl<'a> std::fmt::Debug for BStrDisplay<'a> {
 
 impl<'a> std::fmt::Display for BStrDisplay<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let wide_iter = self.0.as_wide_slice().iter().copied();
-        let iter = std::char::decode_utf16(wide_iter)
-            .map(|r| r.unwrap_or(std::char::REPLACEMENT_CHARACTER));
-
-        for c in iter {
+        for c in self
+            .0
+            .chars()
+            .map(|r| r.unwrap_or(std::char::REPLACEMENT_CHARACTER))
+        {
             f.write_char(c)?
         }
 
