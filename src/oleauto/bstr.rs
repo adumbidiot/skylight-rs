@@ -339,6 +339,9 @@ impl BStrRef {
         String::from_utf16_lossy(self.as_wide_slice())
     }
 
+    /// Make a new [`BStrDisplay`] from this reference.
+    /// [`BStrDisplay`] has a lossy display impl.
+    ///
     pub fn display(&self) -> BStrDisplay {
         BStrDisplay(self)
     }

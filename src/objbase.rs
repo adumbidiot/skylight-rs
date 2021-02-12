@@ -76,8 +76,9 @@ pub fn init_mta_com_runtime() -> Result<(), ComError> {
 #[cfg(test)]
 mod test {
     use super::*;
+
     #[test]
-    fn it_works() {
+    fn init_mta_com() {
         init_mta_com_runtime().expect("COM runtime");
     }
 }
