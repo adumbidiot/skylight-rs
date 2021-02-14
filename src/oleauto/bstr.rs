@@ -167,9 +167,15 @@ impl BStr {
     /// # Panics
     /// Panics if `ptr` is null.
     ///
-    pub unsafe fn from_raw(ptr: BSTR) -> Self {
+    pub unsafe fn from_raw(ptr: *mut u16) -> Self {
         assert!(!ptr.is_null());
         Self(ptr)
+    }
+
+    /// Leak this [`BStr`] and return the inner pointer.
+    ///
+    pub fn into_raw(self) -> *mut u16 {
+        ManuallyDrop::new(self).0
     }
 
     /// Get this [`BStr`] as a `&BStrRef`.
