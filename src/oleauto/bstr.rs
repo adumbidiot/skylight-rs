@@ -7,6 +7,7 @@ use std::ffi::OsString;
 use std::fmt::Write;
 use std::hash::Hash;
 use std::hash::Hasher;
+use std::mem::ManuallyDrop;
 use std::num::TryFromIntError;
 use std::ops::Deref;
 use std::ops::DerefMut;
