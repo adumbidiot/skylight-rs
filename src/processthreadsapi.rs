@@ -34,8 +34,8 @@ impl Process {
     /// # Errors
     /// Fails if the process could not be opened.
     ///
-    pub fn open(access_rights: ProcessAccessRights, pid: DWORD) -> std::io::Result<Self> {
-        let handle = unsafe { OpenProcess(access_rights.bits(), FALSE, pid) };
+    pub fn open(access_rights: ProcessAccessRights, pid: u32) -> std::io::Result<Self> {
+        let handle = unsafe { OpenProcess(access_rights.bits(), FALSE, pid as DWORD) };
 
         if handle.is_null() {
             Err(std::io::Error::last_os_error())
