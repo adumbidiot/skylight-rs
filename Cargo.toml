@@ -23,11 +23,19 @@ oleauto = [
 ]
 processthreadsapi = [
     "handleapi",
+    "winbase",
     "winapi/processthreadsapi",
     "winapi/synchapi",
-    "winapi/winbase",
 ]
 tlhelp32 = [
     "handleapi",
     "winapi/tlhelp32",
+]
+winbase = [
+    "winapi/winbase",
+]
+wincrypt = [
+    "winbase",
+    "winapi/dpapi",
+    "winapi/wincrypt",
 ]
