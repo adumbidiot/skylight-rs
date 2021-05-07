@@ -27,3 +27,15 @@ pub use self::processthreadsapi::*;
 pub mod tlhelp32;
 #[cfg(feature = "tlhelp32")]
 pub use self::tlhelp32::*;
+
+/// winbase.h Utilities
+#[cfg(feature = "winbase")]
+pub mod winbase;
+#[cfg(feature = "winbase")]
+pub use self::winbase::*;
+
+/// wincrypt.h Utilities
+#[cfg(feature = "wincrypt")]
+pub mod wincrypt;
+#[cfg(feature = "wincrypt")]
+pub use self::wincrypt::*;
