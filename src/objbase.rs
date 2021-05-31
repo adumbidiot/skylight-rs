@@ -1,76 +1,50 @@
-use winapi::shared::winerror::CLASS_E_NOAGGREGATION;
-use winapi::shared::winerror::CO_E_NOTINITIALIZED;
-use winapi::shared::winerror::REGDB_E_CLASSNOTREG;
-use winapi::shared::winerror::S_OK;
+use winapi::shared::guiddef::CLSID;
+use winapi::shared::minwindef::DWORD;
+use winapi::shared::winerror::FAILED;
+use winapi::shared::winerror::HRESULT;
+use winapi::um::combaseapi::CoCreateInstance;
 use winapi::um::combaseapi::CoIncrementMTAUsage;
-use winapi::um::winnt::HRESULT;
-
-// TODO: Consider making a more generic error design
-/// An error that may occur while creating or using a COM object.
-///
-#[derive(Debug, PartialEq)]
-pub enum ComError {
-    /// Class ID was not registered.
-    ///
-    ClassNotRegistered,
-
-    /// This class cannot be made as part of an aggregate.
-    ///
-    NoAggregation,
-
-    /// COM is not initalized.
-    ///
-    ComNotInit,
-
-    /// Unknown COM Error.
-    ///
-    Unknown(HRESULT),
-}
-
-impl From<HRESULT> for ComError {
-    fn from(code: HRESULT) -> Self {
-        match code {
-            REGDB_E_CLASSNOTREG => Self::ClassNotRegistered,
-            CLASS_E_NOAGGREGATION => Self::NoAggregation,
-            CO_E_NOTINITIALIZED => Self::ComNotInit,
-            code => Self::Unknown(code),
-        }
-    }
-}
-
-impl std::fmt::Display for ComError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self {
-            Self::ClassNotRegistered => write!(
-                f,
-                "failed to create COM interface, class was not registered"
-            ),
-            Self::NoAggregation => write!(
-                f,
-                "failed to create COM interface, class cannot be made as part of an aggregation"
-            ),
-            Self::ComNotInit => write!(f, "COM is not initalized"),
-            Self::Unknown(code) => write!(f, "unknown error (code 0x{:X})", code),
-        }
-    }
-}
-
-impl std::error::Error for ComError {}
+use winapi::Interface;
 
 // TODO: Consider returning cookie
 /// Init a MTA COM runtime. Only needs to be called once per process.
 ///
 /// # Errors
 /// Returns an error if an MTA COM Runtime could not be created.
-///
-pub fn init_mta_com_runtime() -> Result<(), ComError> {
+pub fn init_mta_com_runtime() -> std::io::Result<()> {
     let mut cookie = std::ptr::null_mut();
-    let ret = unsafe { CoIncrementMTAUsage(&mut cookie) };
+    let code = unsafe { CoIncrementMTAUsage(&mut cookie) };
 
-    match ret {
-        S_OK => Ok(()),
-        code => Err(ComError::from(code)),
+    if FAILED(code) {
+        return Err(std::io::Error::from_raw_os_error(code));
     }
+
+    Ok(())
+}
+
+// TODO: Try to make a safe but less flexible abstraction for this.
+/// Make a new com object from the given class ID.
+///
+/// # Safety
+/// The returned type must match the input class ID.
+pub unsafe fn create_instance<T: Interface>(
+    class_id: &CLSID,
+    flags: DWORD,
+) -> Result<*mut T, HRESULT> {
+    let mut instance = std::ptr::null_mut();
+    let hr = CoCreateInstance(
+        class_id,
+        std::ptr::null_mut(),
+        flags,
+        &T::uuidof(),
+        &mut instance,
+    );
+
+    if FAILED(hr) {
+        return Err(hr);
+    }
+
+    Ok(instance.cast())
 }
 
 #[cfg(test)]
