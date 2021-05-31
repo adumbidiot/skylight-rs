@@ -1,7 +1,7 @@
 use winapi::shared::guiddef::CLSID;
+use winapi::shared::minwindef::DWORD;
 use winapi::shared::winerror::FAILED;
 use winapi::shared::winerror::HRESULT;
-use winapi::shared::wtypesbase::CLSCTX_INPROC_SERVER;
 use winapi::um::combaseapi::CoCreateInstance;
 use winapi::um::combaseapi::CoIncrementMTAUsage;
 use winapi::Interface;
@@ -27,12 +27,15 @@ pub fn init_mta_com_runtime() -> std::io::Result<()> {
 ///
 /// # Safety
 /// The returned type must match the input class ID.
-pub unsafe fn create_instance<T: Interface>(class_id: &CLSID) -> Result<*mut T, HRESULT> {
+pub unsafe fn create_instance<T: Interface>(
+    class_id: &CLSID,
+    flags: DWORD,
+) -> Result<*mut T, HRESULT> {
     let mut instance = std::ptr::null_mut();
     let hr = CoCreateInstance(
         class_id,
         std::ptr::null_mut(),
-        CLSCTX_INPROC_SERVER,
+        flags,
         &T::uuidof(),
         &mut instance,
     );
