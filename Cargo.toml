@@ -33,6 +33,10 @@ tlhelp32 = [
 ]
 winbase = [
     "winapi/winbase",
+    
+    # TODO: This is currently used by the `get_user_name` function.
+    # Consider adding to a new lmcons file or hardcode the necessary constant.
+    "winapi/lmcons"
 ]
 wincrypt = [
     "winbase",
