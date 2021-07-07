@@ -1,13 +1,13 @@
 use std::fmt::Write;
 use std::mem::ManuallyDrop;
+use std::mem::MaybeUninit;
 use std::{convert::TryInto, ffi::OsString, os::windows::ffi::OsStringExt};
+use winapi::shared::lmcons::UNLEN;
+use winapi::um::winbase::GetUserNameW;
 use winapi::um::{
     winbase::{lstrlenW, LocalFree},
     winnt::LPWSTR,
 };
-use winapi::um::winbase::GetUserNameW;
-use std::mem::MaybeUninit;
-use winapi::shared::lmcons::UNLEN;
 
 /// Get the user name of the current user.
 ///
@@ -148,5 +148,16 @@ impl std::fmt::Debug for LocalWideString {
         f.write_char('"')?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn get_user_name_works() {
+        let user_name = get_user_name().unwrap();
+        dbg!(user_name);
     }
 }
