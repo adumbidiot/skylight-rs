@@ -402,7 +402,7 @@ impl TryFrom<&[u16]> for BStr {
     type Error = BStrCreationError;
 
     fn try_from(data: &[u16]) -> Result<Self, Self::Error> {
-        Self::from_wide_slice(&data)
+        Self::from_wide_slice(data)
     }
 }
 
@@ -474,7 +474,7 @@ impl Hash for BStr {
 
 impl Borrow<BStrRef> for BStr {
     fn borrow(&self) -> &BStrRef {
-        &self
+        self
     }
 }
 
