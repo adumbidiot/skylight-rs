@@ -83,6 +83,15 @@ impl CoTaskMemWideString {
         Some(Self(ptr))
     }
 
+    /// Make a new [`CoTaskMemWideString`] from a non-null u16 ptr.
+    ///
+    /// # Safety
+    /// * `ptr` must be a valid nul-terminated widestring
+    /// * `ptr` must be allocated with CoTaskMemAlloc.
+    pub unsafe fn from_raw(ptr: NonNull<u16>) -> Self {
+        Self(ptr)
+    }
+
     /// Get the length of the string.
     ///
     /// This does not include the NUL terminator. This is O(n).
