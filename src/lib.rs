@@ -22,6 +22,12 @@ pub mod processthreadsapi;
 #[cfg(feature = "processthreadsapi")]
 pub use self::processthreadsapi::*;
 
+/// shlobj.h Utilities
+#[cfg(feature = "shlobj")]
+pub mod shlobj;
+#[cfg(feature = "shlobj")]
+pub use self::shlobj::*;
+
 /// tlhelp32.h Utilities
 #[cfg(feature = "tlhelp32")]
 pub mod tlhelp32;

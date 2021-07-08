@@ -1,10 +1,44 @@
 use std::fmt::Write;
 use std::mem::ManuallyDrop;
+use std::mem::MaybeUninit;
 use std::{convert::TryInto, ffi::OsString, os::windows::ffi::OsStringExt};
+use winapi::shared::lmcons::UNLEN;
+use winapi::um::winbase::GetUserNameW;
 use winapi::um::{
     winbase::{lstrlenW, LocalFree},
     winnt::LPWSTR,
 };
+
+/// Get the user name of the current user.
+///
+/// # Errors
+/// * Returns an error if the username could not be retrieved.
+pub fn get_user_name() -> std::io::Result<OsString> {
+    const BUFFER_LEN: u32 = UNLEN + 1;
+
+    let mut buffer_len = BUFFER_LEN;
+    let mut buffer = MaybeUninit::<[u16; BUFFER_LEN as usize]>::uninit();
+
+    // # Safety
+    // This is safe as the buffer exists and the correct buffer length is passed to this function for initialization.
+    let ret = unsafe { GetUserNameW(buffer.as_mut_ptr().cast(), &mut buffer_len) };
+
+    if ret == 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+
+    // # Safety
+    // The data must be valid at this point.
+    // The length of data (minus the nul terminator) has been updated and is passed in.
+    // There are only immutable references left to `buffer`, so making another immutable one is safe.
+    let buffer = unsafe {
+        // -1 for the NUL terminator.
+        let len = (buffer_len - 1) as usize;
+        std::slice::from_raw_parts(buffer.as_ptr().cast(), len)
+    };
+
+    Ok(OsString::from_wide(buffer))
+}
 
 /// A Wide String that has been allocated with `LocalAlloc`.
 #[repr(transparent)]
@@ -114,5 +148,16 @@ impl std::fmt::Debug for LocalWideString {
         f.write_char('"')?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn get_user_name_works() {
+        let user_name = get_user_name().unwrap();
+        dbg!(user_name);
     }
 }
