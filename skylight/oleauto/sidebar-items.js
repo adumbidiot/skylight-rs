@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["bstr","A wrapper around a `BSTR` allocated with `SysAllocStringLen` or similar."]]});

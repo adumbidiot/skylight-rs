@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ConstantSpecialItemIdList","The location of a folder"],["FolderId","A folder type Known Folder Ids"]],"fn":[["get_known_folder_path","Get a known folder path."],["get_special_folder_path","Get a folder path from a csidl."]]});

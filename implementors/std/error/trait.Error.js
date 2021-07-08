@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["skylight"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/std/error/trait.Error.html\" title=\"trait std::error::Error\">Error</a> for <a class=\"enum\" href=\"skylight/oleauto/bstr/enum.BStrCreationError.html\" title=\"enum skylight::oleauto::bstr::BStrCreationError\">BStrCreationError</a>","synthetic":false,"types":["skylight::oleauto::bstr::BStrCreationError"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["crypt_unprotect_data","Decrypt data encrypted with `CryptProtectData`."]],"struct":[["DataBlob","A wincrypt DataBlob."],["DecryptedData","Data decrypted with [`crypt_unprotect_data`]."]]});

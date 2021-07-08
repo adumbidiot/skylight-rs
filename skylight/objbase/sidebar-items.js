@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["create_instance","Make a new com object from the given class ID."],["init_mta_com_runtime","Init a MTA COM runtime. Only needs to be called once per process."]],"struct":[["CoTaskMemWideString","A Wide String allocated with CoTaskMemAlloc."]]});
