@@ -29,8 +29,9 @@ processthreadsapi = [
 ]
 shlobj = [
     "objbase",
-    "winapi/shlobj",
     "winapi/knownfolders",
+    "winapi/shlobj",
+    "winapi/winbase",
 ]
 tlhelp32 = [
     "handleapi",
