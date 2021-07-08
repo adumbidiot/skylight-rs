@@ -108,8 +108,7 @@ impl CoTaskMemWideString {
     ///
     /// This does not include the NUL terminator. This is O(n).
     pub fn as_os_string(&self) -> OsString {
-        let data: Vec<u16> = self.as_slice().to_vec();
-        OsString::from_wide(&data)
+        OsString::from_wide(self.as_slice())
     }
 
     /// Get a slice from this.
