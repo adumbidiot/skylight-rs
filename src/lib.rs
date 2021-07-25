@@ -4,6 +4,12 @@ pub mod handleapi;
 #[cfg(feature = "handleapi")]
 pub use self::handleapi::*;
 
+/// libloaderapi.h Utilities
+#[cfg(feature = "libloaderapi")]
+pub mod libloaderapi;
+#[cfg(feature = "libloaderapi")]
+pub use self::libloaderapi::*;
+
 /// objbase.h Utilities
 #[cfg(feature = "objbase")]
 pub mod objbase;
