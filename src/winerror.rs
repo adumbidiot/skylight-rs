@@ -12,6 +12,7 @@ use winapi::um::winbase::FORMAT_MESSAGE_FROM_SYSTEM;
 use winapi::um::winbase::FORMAT_MESSAGE_IGNORE_INSERTS;
 
 /// A wrapper for a windows HRESULT.
+#[derive(Eq, PartialEq, Clone, Copy, Hash)]
 pub struct HResult(pub u32);
 
 impl HResult {
