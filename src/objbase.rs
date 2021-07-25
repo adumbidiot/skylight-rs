@@ -1,3 +1,4 @@
+use crate::HResult;
 use std::ffi::OsStr;
 use std::ffi::OsString;
 use std::fmt::Write;
@@ -7,7 +8,6 @@ use std::ptr::NonNull;
 use winapi::shared::guiddef::CLSID;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::winerror::FAILED;
-use winapi::shared::winerror::HRESULT;
 use winapi::um::combaseapi::CoCreateInstance;
 use winapi::um::combaseapi::CoIncrementMTAUsage;
 use winapi::um::combaseapi::CoTaskMemAlloc;
@@ -19,12 +19,12 @@ use winapi::Interface;
 ///
 /// # Errors
 /// Returns an error if an MTA COM Runtime could not be created.
-pub fn init_mta_com_runtime() -> std::io::Result<()> {
+pub fn init_mta_com_runtime() -> Result<(), HResult> {
     let mut cookie = std::ptr::null_mut();
     let code = unsafe { CoIncrementMTAUsage(&mut cookie) };
 
     if FAILED(code) {
-        return Err(std::io::Error::from_raw_os_error(code));
+        return Err(HResult::from(code));
     }
 
     Ok(())
@@ -38,7 +38,7 @@ pub fn init_mta_com_runtime() -> std::io::Result<()> {
 pub unsafe fn create_instance<T: Interface>(
     class_id: &CLSID,
     flags: DWORD,
-) -> Result<*mut T, HRESULT> {
+) -> Result<*mut T, HResult> {
     let mut instance = std::ptr::null_mut();
     let hr = CoCreateInstance(
         class_id,
@@ -49,7 +49,7 @@ pub unsafe fn create_instance<T: Interface>(
     );
 
     if FAILED(hr) {
-        return Err(hr);
+        return Err(HResult::from(hr));
     }
 
     Ok(instance.cast())
