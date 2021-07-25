@@ -105,6 +105,7 @@ impl std::error::Error for HResult {}
 #[cfg(test)]
 mod test {
     use super::*;
+    use winapi::shared::winerror::CLASS_E_NOAGGREGATION;
     use winapi::shared::winerror::CO_E_NOTINITIALIZED;
     use winapi::shared::winerror::REGDB_E_CLASSNOTREG;
     use winapi::shared::winerror::RPC_E_CHANGED_MODE;
@@ -134,5 +135,10 @@ mod test {
     #[test]
     fn display_regdb_e_class_not_reg() {
         assert!(HResult::from(REGDB_E_CLASSNOTREG).message().is_ok());
+    }
+
+    #[test]
+    fn display_class_e_no_aggregation() {
+        assert!(HResult::from(CLASS_E_NOAGGREGATION).message().is_ok());
     }
 }
