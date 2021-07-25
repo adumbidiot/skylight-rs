@@ -1,13 +1,12 @@
 use std::fmt::Write;
 use std::mem::ManuallyDrop;
 use std::mem::MaybeUninit;
+use std::ptr::NonNull;
 use std::{convert::TryInto, ffi::OsString, os::windows::ffi::OsStringExt};
 use winapi::shared::lmcons::UNLEN;
+use winapi::um::winbase::lstrlenW;
 use winapi::um::winbase::GetUserNameW;
-use winapi::um::{
-    winbase::{lstrlenW, LocalFree},
-    winnt::LPWSTR,
-};
+use winapi::um::winbase::LocalFree;
 
 /// Get the user name of the current user.
 ///
@@ -42,63 +41,54 @@ pub fn get_user_name() -> std::io::Result<OsString> {
 
 /// A Wide String that has been allocated with `LocalAlloc`.
 #[repr(transparent)]
-pub struct LocalWideString(LPWSTR);
+pub struct LocalWideString(NonNull<u16>);
 
 impl LocalWideString {
     /// Make a [`LocalWideString`] from a ptr.
     ///
     /// # Safety
-    /// s must be a valid LPWSTR
-    ///
-    /// # Panics
-    /// Panics if ptr is null.
-    pub unsafe fn from_lpwstr(ptr: LPWSTR) -> Self {
-        Self::try_from_lpwstr(ptr).expect("ptr is null")
+    /// ptr must be a valid LPWSTR allocated with `LocalAlloc`.
+    pub unsafe fn from_raw(ptr: NonNull<u16>) -> Self {
+        Self(ptr)
     }
 
-    /// Try to make a [`LocalWideString`] from a ptr.
-    ///
-    /// # Safety
-    /// s must be a valid LPWSTR
-    ///
-    /// # Errors
-    /// Returns `None` if ptr is null.
-    pub unsafe fn try_from_lpwstr(ptr: LPWSTR) -> Option<Self> {
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self(ptr))
-        }
-    }
-
-    /// Get a mut ptr to the widestring
-    pub fn as_mut_ptr(&mut self) -> LPWSTR {
-        self.0
+    /// Get a mut ptr to the string
+    pub fn as_mut_ptr(&mut self) -> *mut u16 {
+        self.0.as_ptr()
     }
 
     /// Get the length of the string in characters.
+    ///
+    /// This is an O(n) operation.
     ///
     /// # Panics
     /// Panics if the length cannot fit in a `usize`.
     pub fn len(&self) -> usize {
         unsafe {
-            lstrlenW(self.0)
+            lstrlenW(self.0.as_ptr())
                 .try_into()
-                .expect("length cannot fit in a `usize`")
+                .expect("len cannot fit in a `usize`")
         }
     }
 
     //// Check if this string is empty.
+    ///
+    /// This is an O(n) operation.
+    ///
+    /// # Panics
+    /// Panics if the length cannot fit in a `usize`.
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// Get this string as a slice of u16s.
     ///
+    /// This is an O(n) operation.
+    ///
     /// # Panics
     /// Panics if the length cannot fit in a `usize`.
     pub fn as_slice(&self) -> &[u16] {
-        unsafe { std::slice::from_raw_parts(self.0, self.len()) }
+        unsafe { std::slice::from_raw_parts(self.0.as_ptr(), self.len()) }
     }
 
     /// Get this as an [`OsString`].
@@ -107,6 +97,29 @@ impl LocalWideString {
     /// Panics if the length cannot fit in a `usize`.
     pub fn as_os_string(&self) -> OsString {
         OsString::from_wide(self.as_slice())
+    }
+
+    /// Convert this to a [`String`].
+    ///
+    /// # Errors
+    /// Returns an error if this contains invalid utf16
+    pub fn to_str(&self) -> Result<String, std::string::FromUtf16Error> {
+        String::from_utf16(self.as_slice())
+    }
+
+    /// Convert this to a [`String`] lossily.
+    pub fn to_str_lossy(&self) -> String {
+        String::from_utf16_lossy(self.as_slice())
+    }
+
+    /// Try to iterate over the chars in this string
+    pub fn chars(&self) -> impl Iterator<Item = Result<char, std::char::DecodeUtf16Error>> + '_ {
+        std::char::decode_utf16(self.as_slice().iter().copied())
+    }
+
+    /// Get a struct that implements display lossily for this string.
+    pub fn display(&self) -> LocalWideStringDisplay {
+        LocalWideStringDisplay(self)
     }
 
     /// Try to destroy this object.
@@ -137,7 +150,8 @@ impl Drop for LocalWideString {
 impl std::fmt::Debug for LocalWideString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_char('"')?;
-        for c in std::char::decode_utf16(self.as_slice().iter().copied())
+        for c in self
+            .chars()
             .map(|r| r.unwrap_or(std::char::REPLACEMENT_CHARACTER))
         {
             for c in c.escape_debug() {
@@ -146,6 +160,23 @@ impl std::fmt::Debug for LocalWideString {
         }
 
         f.write_char('"')?;
+
+        Ok(())
+    }
+}
+
+/// A struct that implements display for [`LocalWideString`]
+pub struct LocalWideStringDisplay<'a>(&'a LocalWideString);
+
+impl std::fmt::Display for LocalWideStringDisplay<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        for c in self
+            .0
+            .chars()
+            .map(|r| r.unwrap_or(std::char::REPLACEMENT_CHARACTER))
+        {
+            f.write_char(c)?
+        }
 
         Ok(())
     }

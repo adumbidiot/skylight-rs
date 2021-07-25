@@ -2,6 +2,7 @@ use crate::winbase::LocalWideString;
 use std::convert::TryInto;
 use std::mem::ManuallyDrop;
 use std::mem::MaybeUninit;
+use std::ptr::NonNull;
 use winapi::shared::minwindef::FALSE;
 use winapi::um::dpapi::CryptUnprotectData;
 use winapi::um::dpapi::CRYPTPROTECT_UI_FORBIDDEN;
@@ -154,7 +155,8 @@ where
         )
     };
 
-    let description = unsafe { LocalWideString::try_from_lpwstr(description_ptr) };
+    let description = NonNull::new(description_ptr)
+        .map(|description_ptr| unsafe { LocalWideString::from_raw(description_ptr) });
 
     if ret == FALSE {
         return Err(std::io::Error::last_os_error());
