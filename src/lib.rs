@@ -51,3 +51,9 @@ pub use self::winbase::*;
 pub mod wincrypt;
 #[cfg(feature = "wincrypt")]
 pub use self::wincrypt::*;
+
+/// winerror.h Utilities
+#[cfg(feature = "winerror")]
+pub mod winerror;
+#[cfg(feature = "winerror")]
+pub use self::winerror::*;

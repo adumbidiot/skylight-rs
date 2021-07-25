@@ -3,7 +3,8 @@ name = "skylight"
 version = "0.0.0"
 authors = [ "adumbidiot <nathaniel.daniel23@outlook.com>" ]
 edition = "2018"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
+resolver = "2"
 
 [dependencies]
 bitflags = "1.2.1"
@@ -51,4 +52,9 @@ wincrypt = [
     "winbase",
     "winapi/dpapi",
     "winapi/wincrypt",
+]
+winerror = [
+    "winapi/winerror",
+    "libloaderapi",
+    "winbase",
 ]
