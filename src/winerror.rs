@@ -4,6 +4,7 @@ use std::ptr::NonNull;
 use winapi::shared::ntdef::LANG_SYSTEM_DEFAULT;
 use winapi::shared::ntdef::MAKELANGID;
 use winapi::shared::ntdef::SUBLANG_SYS_DEFAULT;
+use winapi::um::errhandlingapi::GetLastError;
 use winapi::um::winbase::FormatMessageW;
 use winapi::um::winbase::FORMAT_MESSAGE_ALLOCATE_BUFFER;
 use winapi::um::winbase::FORMAT_MESSAGE_FROM_HMODULE;
@@ -14,6 +15,11 @@ use winapi::um::winbase::FORMAT_MESSAGE_IGNORE_INSERTS;
 pub struct HResult(pub u32);
 
 impl HResult {
+    /// Get the last error for this thread
+    pub fn get_last_error() -> Self {
+        Self::from(unsafe { GetLastError() })
+    }
+
     /// Get the message for this error using default settings.
     pub fn message(&self) -> std::io::Result<LocalWideString> {
         self.message_with_hmodule(None)

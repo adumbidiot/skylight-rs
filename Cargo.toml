@@ -54,6 +54,7 @@ wincrypt = [
     "winapi/wincrypt",
 ]
 winerror = [
+    "winapi/errhandlingapi",
     "winapi/winerror",
     "libloaderapi",
     "winbase",
