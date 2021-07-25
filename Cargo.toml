@@ -20,7 +20,7 @@ libloaderapi = [
 ]
 objbase = [
     "winapi/objbase",
-    "winapi/winerror",
+    "winerror",
 ]
 oleauto = [
     "winapi/oleauto",
