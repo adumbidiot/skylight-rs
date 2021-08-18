@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["HResult","A wrapper for a windows HRESULT."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Process","A Process"],["ProcessAccessRights","Process access rights for opening access to a process."]]});

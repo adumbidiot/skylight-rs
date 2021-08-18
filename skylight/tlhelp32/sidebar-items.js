@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ProcessEntry","A Process Entry."],["ProcessIter","An iterator over processes in a [`Snapshot`]."],["Snapshot","A Snapshot of process and heap info."],["SnapshotFlags","The flags to pass when creating a new [`Snapshot`]."]]});

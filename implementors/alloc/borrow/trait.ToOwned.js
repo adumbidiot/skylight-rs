@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["skylight"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.54.0/alloc/borrow/trait.ToOwned.html\" title=\"trait alloc::borrow::ToOwned\">ToOwned</a> for <a class=\"struct\" href=\"skylight/oleauto/bstr/struct.BStrRef.html\" title=\"struct skylight::oleauto::bstr::BStrRef\">BStrRef</a>","synthetic":false,"types":["skylight::oleauto::bstr::BStrRef"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

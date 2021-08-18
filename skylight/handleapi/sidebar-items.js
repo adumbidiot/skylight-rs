@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Handle","A wrapper around a winapi `HANDLE`."]]});

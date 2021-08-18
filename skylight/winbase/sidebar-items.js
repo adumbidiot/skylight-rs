@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["get_user_name","Get the user name of the current user."]],"struct":[["LocalWideString","A Wide String that has been allocated with `LocalAlloc`."],["LocalWideStringDisplay","A struct that implements display for [`LocalWideString`]"]]});

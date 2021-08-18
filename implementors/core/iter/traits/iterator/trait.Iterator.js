@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["skylight"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.54.0/core/iter/traits/iterator/trait.Iterator.html\" title=\"trait core::iter::traits::iterator::Iterator\">Iterator</a> for <a class=\"struct\" href=\"skylight/tlhelp32/struct.ProcessIter.html\" title=\"struct skylight::tlhelp32::ProcessIter\">ProcessIter</a>&lt;'_&gt;","synthetic":false,"types":["skylight::tlhelp32::ProcessIter"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
